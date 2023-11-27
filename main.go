@@ -10,8 +10,27 @@ func main() {
 	fmt.Println("ss")
 	// go itemaShow()
 	// go itembShow()
-	go itema()
-	go itemb()
+	// go itema()
+	go func() {
+		itemb(5000)
+	}()
+
+	go func() {
+		itembError(5)
+		time.Sleep(time.Second * 1)
+		itembError(5)
+		time.Sleep(time.Second * 1)
+		itembError(5)
+		time.Sleep(time.Second * 1)
+		itembError(5)
+		time.Sleep(time.Second * 1)
+		itembError(5)
+		time.Sleep(time.Second * 1)
+		itembError(30)
+		time.Sleep(time.Second * 5)
+		itembError(5)
+	}()
+
 	for {
 		time.Sleep(time.Hour * 10)
 	}
@@ -42,11 +61,22 @@ func itema() {
 	}
 
 }
-func itemb() {
-	for {
-		supplier := other.ThirdSupplierSwitch["b"].(other.ThirdSupplier)
-		supplier.Check()
-		time.Sleep(time.Second)
+
+func itemb(number int) {
+	supplier := other.ThirdSupplierSwitch["b"].(other.ThirdSupplier)
+	for i := 0; i < number; i++ {
+		status, _ := supplier.Check()
+		fmt.Println("status", status, "----", i)
+		time.Sleep(time.Millisecond * 100)
 	}
 
+}
+
+func itembError(number int) {
+	supplier := other.ThirdSupplierSwitch["b"].(other.ThirdSupplier)
+	for i := 0; i < number; i++ {
+		supplier.Err()
+		time.Sleep(time.Millisecond * 20)
+
+	}
 }

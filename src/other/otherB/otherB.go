@@ -7,21 +7,26 @@ import (
 
 func init() {
 	fmt.Println("执行了 otherB init")
-	fuse.CreateFuse("otherB")
+	// fuse.CreateFuse("otherB")
 }
 
 type Other struct {
 }
 
 func (c Other) Check() (bool, error) {
-	if fuse.FushStatus("otherB") {
-		fmt.Println("能请求")
-	}
-	return false, nil
+
+	isRequest := fuse.FuseStatus("otherB")
+	return isRequest, nil
 
 }
 func (c Other) Show() {
 	fuse := fuse.CreateFuse("otherB")
 	fmt.Println("show otherB", fuse)
+
+}
+func (c Other) Err() {
+	fuse := fuse.CreateFuse("otherB")
+	fuse.ErrNumber++
+	// fmt.Println("show otherB", fuse)
 
 }

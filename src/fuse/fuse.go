@@ -1,25 +1,30 @@
 package fuse
 
-import "time"
+import (
+	"encoding/json"
+	"fmt"
+	"time"
+)
 
 type FuseStruct struct {
-	Number        int
-	SuccessNumber int
-	ErrNumber     int
-	MaxErrNumber  int
-	HalfNumber    int
-	Status        bool
-	FuseStatus    int
-	TimeCycle     int
-	LastTime      time.Time
-	CloseTime     int
-	GoStatus      bool
+	Number            int
+	HalfSuccessNumber int
+	HalfBucketNumber  int
+	ErrNumber         int
+	MaxErrNumber      int
+	HalfNumber        int
+	Status            bool
+	FuseStatus        int
+	TimeCycle         int
+	LastTime          time.Time
+	CloseTime         int
+	GoStatus          bool
 }
 
-var FushMap map[string]*FuseStruct
+var FuseMap map[string]*FuseStruct
 
 func init() {
-	FushMap = make(map[string]*FuseStruct, 0)
+	FuseMap = make(map[string]*FuseStruct, 0)
 	go run()
 }
 
@@ -31,7 +36,7 @@ func run() {
 }
 
 func handle() {
-	for _, v := range FushMap {
+	for _, v := range FuseMap {
 		if !v.GoStatus {
 			go handleItem(v)
 		}
@@ -39,70 +44,88 @@ func handle() {
 	}
 }
 
-func handleItem(fush *FuseStruct) {
+func handleItem(fuse *FuseStruct) {
 	for {
-		fush.GoStatus = true
-		if fush.FuseStatus == 1 {
-			if fush.ErrNumber > fush.MaxErrNumber {
-				fush.Status = false
-				fush.FuseStatus = 3
-				fush.LastTime = time.Now().Add(time.Second * time.Duration(fush.CloseTime))
+		sss, _ := json.Marshal(fuse)
+		fmt.Println("sta", string(sss))
+
+		fuse.GoStatus = true
+		if fuse.FuseStatus == 1 {
+			if fuse.ErrNumber >= fuse.MaxErrNumber {
+				fuse.Status = false
+				fuse.FuseStatus = 3
+				fuse.HalfBucketNumber = fuse.HalfNumber
+				fuse.LastTime = time.Now().Add(time.Second * time.Duration(fuse.CloseTime))
 			} else {
-				fush.ErrNumber = 0
-				fush.Number = 0
+				fuse.ErrNumber = 0
+				fuse.Number = 0
 			}
 		}
 
-		if fush.FuseStatus == 2 {
-			if fush.Number > fush.HalfNumber {
-				if fush.ErrNumber > fush.SuccessNumber {
-					fush.Status = false
-					fush.FuseStatus = 3
-					fush.LastTime = time.Now().Add(time.Second * time.Duration(fush.CloseTime))
+		if fuse.FuseStatus == 2 {
+			if fuse.Number >= fuse.HalfNumber {
+				if fuse.ErrNumber >= fuse.HalfSuccessNumber {
+					fuse.Status = false
+					fuse.FuseStatus = 3
+					fuse.HalfBucketNumber = fuse.HalfNumber
+					fuse.LastTime = time.Now().Add(time.Second * time.Duration(fuse.CloseTime))
 				} else {
-					fush.FuseStatus = 1
-					fush.Status = true
+					fuse.FuseStatus = 1
+					fuse.Status = true
 				}
 			}
 		}
 
-		if fush.FuseStatus == 3 {
-			if time.Now().After(fush.LastTime) {
-				fush.ErrNumber = 0
-				fush.Number = 0
-				fush.FuseStatus = 2
-				fush.Status = true
+		if fuse.FuseStatus == 3 {
+			if time.Now().After(fuse.LastTime) {
+				fuse.ErrNumber = 0
+				fuse.Number = 0
+				fuse.FuseStatus = 2
+				fuse.Status = true
 
 			}
 		}
-
-		time.Sleep(time.Second * time.Duration(fush.TimeCycle))
+		sssend, _ := json.Marshal(fuse)
+		fmt.Println("end", string(sssend))
+		// fmt.Println("fuse.FuseStatus", fuse.FuseStatus)
+		// fmt.Println("fuse.FuseStatus", fuse.FuseStatus)
+		time.Sleep(time.Second * time.Duration(fuse.TimeCycle))
 
 	}
 
 }
 
 func CreateFuse(name string) *FuseStruct {
-	if item, ok := FushMap[name]; ok {
+	if item, ok := FuseMap[name]; ok {
 		return item
 	} else {
-		var fush FuseStruct
-		fush.MaxErrNumber = 50
-		fush.HalfNumber = 100
-		fush.SuccessNumber = 10
-		fush.ErrNumber = 0
-		fush.Status = true
-		fush.FuseStatus = 1
-		fush.TimeCycle = 1
-		fush.CloseTime = 5
-		FushMap[name] = &fush
-		return &fush
+		var fuse FuseStruct
+		fuse.MaxErrNumber = 10
+		fuse.HalfNumber = 10
+		fuse.HalfBucketNumber = 10
+		fuse.HalfSuccessNumber = 3
+		fuse.ErrNumber = 0
+		fuse.Status = true
+		fuse.FuseStatus = 1
+		fuse.TimeCycle = 1
+		fuse.CloseTime = 5
+		FuseMap[name] = &fuse
+		return &fuse
 	}
 
 }
 
-func FushStatus(name string) bool {
-	fush := CreateFuse(name)
-	fush.Number++
-	return fush.Status
+func FuseStatus(name string) bool {
+	fuse := CreateFuse(name)
+	fuse.Number++
+	if fuse.FuseStatus == 2 {
+		sss, _ := json.Marshal(fuse)
+		fmt.Println("FuseStatus 2", string(sss))
+		if fuse.HalfBucketNumber > 0 {
+			fuse.HalfBucketNumber--
+		} else {
+			return false
+		}
+	}
+	return fuse.Status
 }
