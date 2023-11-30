@@ -12,24 +12,24 @@ func main() {
 	// go itembShow()
 	// go itema()
 	go func() {
-		itemb(5000)
+		itemb(5000000)
 	}()
 
-	go func() {
-		itembError(5)
-		time.Sleep(time.Second * 1)
-		itembError(5)
-		time.Sleep(time.Second * 1)
-		itembError(5)
-		time.Sleep(time.Second * 1)
-		itembError(5)
-		time.Sleep(time.Second * 1)
-		itembError(5)
-		time.Sleep(time.Second * 1)
-		itembError(30)
-		time.Sleep(time.Second * 5)
-		itembError(5)
-	}()
+	// go func() {
+	// 	itembError(5)
+	// 	time.Sleep(time.Second * 1)
+	// 	itembError(5)
+	// 	time.Sleep(time.Second * 1)
+	// 	itembError(5)
+	// 	time.Sleep(time.Second * 1)
+	// 	itembError(5)
+	// 	time.Sleep(time.Second * 1)
+	// 	itembError(5)
+	// 	time.Sleep(time.Second * 1)
+	// 	itembError(30)
+	// 	time.Sleep(time.Second * 5)
+	// 	itembError(5)
+	// }()
 
 	for {
 		time.Sleep(time.Hour * 10)
@@ -65,9 +65,12 @@ func itema() {
 func itemb(number int) {
 	supplier := other.ThirdSupplierSwitch["b"].(other.ThirdSupplier)
 	for i := 0; i < number; i++ {
-		status, _ := supplier.Check()
-		fmt.Println("status", status, "----", i)
-		time.Sleep(time.Millisecond * 100)
+		if i%10000 == 0 {
+			fmt.Println("i", i)
+		}
+		supplier.Check()
+		// fmt.Println("status", status, "----", i)
+		time.Sleep(time.Microsecond * 500)
 	}
 
 }
